@@ -55,38 +55,46 @@ function MapView() {
   };
 
   const focusCurrentLocation = () => {
-
-      navigator.geolocation.getCurrentPosition(
-
-          (position) => {
-
-              setLocation([
-                  position.coords.latitude,
-                  position.coords.longitude,
-              ]);
-
-              setRecenterTrigger(prev => prev + 1);
-
-          },
-
-          (error) => {
-
-              console.error(error);
-
-          },
-
-          {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-          }
-
-      );
-
+        setRecenterTrigger(prev => prev + 1);
   };
 
   useEffect(() => {
-    loadCurrentLocation();
+
+        if (!navigator.geolocation) return;
+
+        const watchId = navigator.geolocation.watchPosition(
+
+            (position) => {
+
+                setLocation([
+                    position.coords.latitude,
+                    position.coords.longitude,
+                ]);
+
+            },
+
+            (error) => {
+
+                console.error(error);
+
+            },
+
+            {
+
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+
+            }
+
+        );
+
+        return () => {
+
+            navigator.geolocation.clearWatch(watchId);
+
+        };
+
   }, []);
 
   return (
