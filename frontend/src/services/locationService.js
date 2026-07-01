@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function sendLocation(location) {
     try {
@@ -13,6 +13,7 @@ export async function sendLocation(location) {
         if (!response.ok) {
             throw new Error("Failed to send location");
         }
+
         return await response.json();
 
     } catch (error) {

@@ -1,0 +1,52 @@
+Folder PATH listing for volume Windows 
+Volume serial number is 00000020 84AF:5727
+C:.
+|   .oxlintrc.json
+|   Dockerfile
+|   frontend_structure.txt
+|   index.html
+|   package-lock.json
+|   package.json
+|   README.md
+|   vite.config.js
+|   
++---public
+|   |   favicon.svg
+|   |   icons.svg
+|   |   
+|   \---geojson
+|           zone2.geojson
+|           zone3.geojson
+|           zone4.geojson
+|           zone5.geojson
+|           
+\---src
+    |   App.css
+    |   App.jsx
+    |   index.css
+    |   main.jsx
+    |   
+    +---assets
+    |       hero.png
+    |       layers.png
+    |       react.svg
+    |       vite.svg
+    |       
+    +---components
+    |       ChangeView.jsx
+    |       EarthquakeLayer.jsx
+    |       HazardLayer.jsx
+    |       LayerCard.jsx
+    |       LayerControl.jsx
+    |       LayerSection.jsx
+    |       Legend.jsx
+    |       MapView.jsx
+    |       RecenterButton.jsx
+    |       TouristMarker.jsx
+    |       
+    +---services
+    |       locationService.js
+    |       
+    \---utils
+            distance.js
+            
