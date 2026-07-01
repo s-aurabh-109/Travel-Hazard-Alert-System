@@ -34,6 +34,7 @@ services:
 
     volumes:
       - ./backend-service:/app
+      - ./shared:/app/shared:ro
 
     command: >
       uvicorn main:app
