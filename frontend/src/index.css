@@ -81,6 +81,33 @@ body {
   margin-top: -2px;
 }
 
+.police-marker {
+  background: transparent;
+  border: 0;
+}
+
+.police-marker__pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 3px;
+  background: #1457d9;
+  border: 2px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.32);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(-45deg);
+}
+
+.police-marker__pin span {
+  transform: rotate(45deg);
+  margin-top: -1px;
+}
+
 #root {
   width: 1126px;
   max-width: 100%;

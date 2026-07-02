@@ -13,28 +13,31 @@ OVERPASS_API_URL = os.getenv(
     "https://overpass-api.de/api/interpreter",
 )
 OVERPASS_TIMEOUT_SECONDS = int(os.getenv("OVERPASS_TIMEOUT_SECONDS", 25))
-DEFAULT_SEARCH_RADIUS_METERS = int(os.getenv("HOSPITAL_SEARCH_RADIUS_METERS", 10000))
-HOSPITAL_CACHE_TTL_SECONDS = int(os.getenv("HOSPITAL_CACHE_TTL_SECONDS", 1800))
-HOSPITAL_CACHE_KEY_PREFIX = "hospital_search"
-HOSPITAL_CACHE_COORDINATE_PRECISION = 2
-HOSPITAL_RADIUS_FALLBACKS = (20000, 30000, 50000)
+DEFAULT_SEARCH_RADIUS_METERS = int(os.getenv("POLICE_SEARCH_RADIUS_METERS", 10000))
+POLICE_CACHE_TTL_SECONDS = int(os.getenv("POLICE_CACHE_TTL_SECONDS", 1800))
+POLICE_PROVIDER_FAILURE_CACHE_TTL_SECONDS = int(
+    os.getenv("POLICE_PROVIDER_FAILURE_CACHE_TTL_SECONDS", 180)
+)
+POLICE_CACHE_KEY_PREFIX = "police_search:v4"
+POLICE_CACHE_COORDINATE_PRECISION = 2
+POLICE_RADIUS_FALLBACKS = (20000, 30000)
 
 
-class HospitalProviderError(Exception):
+class PoliceProviderError(Exception):
     pass
 
 
-def build_hospital_cache_key(
+def build_police_cache_key(
     latitude: float,
     longitude: float,
     limit: int,
     radius_meters: int,
 ):
-    rounded_latitude = round(latitude, HOSPITAL_CACHE_COORDINATE_PRECISION)
-    rounded_longitude = round(longitude, HOSPITAL_CACHE_COORDINATE_PRECISION)
+    rounded_latitude = round(latitude, POLICE_CACHE_COORDINATE_PRECISION)
+    rounded_longitude = round(longitude, POLICE_CACHE_COORDINATE_PRECISION)
 
     return (
-        f"{HOSPITAL_CACHE_KEY_PREFIX}:"
+        f"{POLICE_CACHE_KEY_PREFIX}:"
         f"{rounded_latitude}:"
         f"{rounded_longitude}:"
         f"{limit}:"
@@ -42,13 +45,13 @@ def build_hospital_cache_key(
     )
 
 
-def get_cached_hospital_response(
+def get_cached_police_response(
     latitude: float,
     longitude: float,
     limit: int,
     radius_meters: int,
 ):
-    cache_key = build_hospital_cache_key(latitude, longitude, limit, radius_meters)
+    cache_key = build_police_cache_key(latitude, longitude, limit, radius_meters)
 
     try:
         cached_response = redis_client.get(cache_key)
@@ -67,19 +70,20 @@ def get_cached_hospital_response(
     return response
 
 
-def set_cached_hospital_response(
+def set_cached_police_response(
     latitude: float,
     longitude: float,
     limit: int,
     radius_meters: int,
     response: dict,
+    ttl_seconds: int = POLICE_CACHE_TTL_SECONDS,
 ):
-    cache_key = build_hospital_cache_key(latitude, longitude, limit, radius_meters)
+    cache_key = build_police_cache_key(latitude, longitude, limit, radius_meters)
 
     try:
         redis_client.setex(
             cache_key,
-            HOSPITAL_CACHE_TTL_SECONDS,
+            ttl_seconds,
             json.dumps(response),
         )
     except Exception:
@@ -89,7 +93,7 @@ def set_cached_hospital_response(
 def get_radius_sequence(radius_meters: int):
     radii = [radius_meters]
 
-    for fallback_radius in HOSPITAL_RADIUS_FALLBACKS:
+    for fallback_radius in POLICE_RADIUS_FALLBACKS:
         if fallback_radius > radius_meters:
             radii.append(fallback_radius)
 
@@ -113,18 +117,21 @@ def build_overpass_query(latitude: float, longitude: float, radius_meters: int) 
     return f"""
     [out:json][timeout:{OVERPASS_TIMEOUT_SECONDS}];
     (
-      node["amenity"="hospital"](around:{radius_meters},{latitude},{longitude});
-      way["amenity"="hospital"](around:{radius_meters},{latitude},{longitude});
-      relation["amenity"="hospital"](around:{radius_meters},{latitude},{longitude});
-      node["healthcare"="hospital"](around:{radius_meters},{latitude},{longitude});
-      way["healthcare"="hospital"](around:{radius_meters},{latitude},{longitude});
-      relation["healthcare"="hospital"](around:{radius_meters},{latitude},{longitude});
+      node["amenity"="police"](around:{radius_meters},{latitude},{longitude});
+      way["amenity"="police"](around:{radius_meters},{latitude},{longitude});
+      relation["amenity"="police"](around:{radius_meters},{latitude},{longitude});
+      node["police"="station"](around:{radius_meters},{latitude},{longitude});
+      way["police"="station"](around:{radius_meters},{latitude},{longitude});
+      relation["police"="station"](around:{radius_meters},{latitude},{longitude});
+      node["office"="police"](around:{radius_meters},{latitude},{longitude});
+      way["office"="police"](around:{radius_meters},{latitude},{longitude});
+      relation["office"="police"](around:{radius_meters},{latitude},{longitude});
     );
     out body center;
     """
 
 
-def fetch_hospitals_from_overpass(latitude: float, longitude: float, radius_meters: int):
+def fetch_police_from_overpass(latitude: float, longitude: float, radius_meters: int):
     request_body = urlencode(
         {
             "data": build_overpass_query(latitude, longitude, radius_meters),
@@ -144,22 +151,30 @@ def fetch_hospitals_from_overpass(latitude: float, longitude: float, radius_mete
         with urlopen(request, timeout=OVERPASS_TIMEOUT_SECONDS) as response:
             return json.loads(response.read().decode("utf-8"))
     except HTTPError as error:
-        raise HospitalProviderError(
-            f"OpenStreetMap hospital lookup failed with HTTP {error.code}"
+        raise PoliceProviderError(
+            f"OpenStreetMap police lookup failed with HTTP {error.code}"
         ) from error
     except URLError as error:
-        raise HospitalProviderError(
-            "OpenStreetMap hospital lookup is unreachable right now"
+        raise PoliceProviderError(
+            "OpenStreetMap police lookup is unreachable right now"
+        ) from error
+    except TimeoutError as error:
+        raise PoliceProviderError(
+            "OpenStreetMap police lookup timed out"
+        ) from error
+    except OSError as error:
+        raise PoliceProviderError(
+            "OpenStreetMap police lookup failed before a response was received"
         ) from error
     except json.JSONDecodeError as error:
-        raise HospitalProviderError(
-            "OpenStreetMap hospital lookup returned an invalid response"
+        raise PoliceProviderError(
+            "OpenStreetMap police lookup returned an invalid response"
         ) from error
 
 
 def build_address(tags: dict) -> str:
     if tags.get("addr:full"):
-        return tags["addr:full"]
+        return str(tags["addr:full"])
 
     address_parts = [
         tags.get("addr:housenumber"),
@@ -169,9 +184,19 @@ def build_address(tags: dict) -> str:
         tags.get("addr:postcode"),
         tags.get("addr:country"),
     ]
-    address = ", ".join(part for part in address_parts if part)
+    address = ", ".join(str(part) for part in address_parts if part)
 
     return address or "Address unavailable"
+
+
+def get_tag_text(tags: dict, *keys: str):
+    for key in keys:
+        value = tags.get(key)
+
+        if value:
+            return str(value)
+
+    return None
 
 
 def get_element_coordinates(element: dict):
@@ -185,68 +210,66 @@ def get_element_coordinates(element: dict):
     return None
 
 
-def normalize_overpass_hospital(element: dict, latitude: float, longitude: float):
+def normalize_overpass_police_station(
+    element: dict,
+    latitude: float,
+    longitude: float,
+):
     coordinates = get_element_coordinates(element)
 
     if coordinates is None:
         return None
 
-    hospital_latitude, hospital_longitude = coordinates
+    police_latitude, police_longitude = coordinates
     tags = element.get("tags", {})
-    hospital_name = (
-        tags.get("name")
-        or tags.get("official_name")
-        or tags.get("operator")
-        or "Unnamed hospital"
+    station_name = (
+        get_tag_text(tags, "name", "official_name", "operator")
+        or "Unnamed police station"
     )
     distance_km = calculate_distance_km(
         latitude,
         longitude,
-        hospital_latitude,
-        hospital_longitude,
+        police_latitude,
+        police_longitude,
     )
 
     return {
         "id": f"osm:{element['type']}:{element['id']}",
-        "name": hospital_name,
-        "latitude": hospital_latitude,
-        "longitude": hospital_longitude,
+        "name": station_name,
+        "latitude": police_latitude,
+        "longitude": police_longitude,
         "address": build_address(tags),
-        "emergency_phone": (
-            tags.get("emergency:phone")
-            or tags.get("phone")
-            or tags.get("contact:phone")
-        ),
+        "phone": get_tag_text(tags, "phone", "contact:phone"),
         "distance_km": round(distance_km, 2),
     }
 
 
-def fetch_and_normalize_nearest_hospitals(
+def fetch_and_normalize_nearest_police_stations(
     latitude: float,
     longitude: float,
     limit: int = 5,
     radius_meters: int = DEFAULT_SEARCH_RADIUS_METERS,
 ):
-    overpass_response = fetch_hospitals_from_overpass(
+    overpass_response = fetch_police_from_overpass(
         latitude,
         longitude,
         radius_meters,
     )
-    hospitals_by_id = {}
+    police_by_id = {}
 
     for element in overpass_response.get("elements", []):
-        hospital = normalize_overpass_hospital(
+        police_station = normalize_overpass_police_station(
             element,
             latitude,
             longitude,
         )
 
-        if hospital is not None:
-            hospitals_by_id[hospital["id"]] = hospital
+        if police_station is not None:
+            police_by_id[police_station["id"]] = police_station
 
-    nearest_hospitals = sorted(
-        hospitals_by_id.values(),
-        key=lambda hospital: hospital["distance_km"],
+    nearest_police_stations = sorted(
+        police_by_id.values(),
+        key=lambda police_station: police_station["distance_km"],
     )[:limit]
 
     return {
@@ -255,12 +278,32 @@ def fetch_and_normalize_nearest_hospitals(
         "radius_meters": radius_meters,
         "provider": "openstreetmap_overpass",
         "cache_status": "miss",
-        "count": len(nearest_hospitals),
-        "hospitals": nearest_hospitals,
+        "provider_status": "ok",
+        "count": len(nearest_police_stations),
+        "police_stations": nearest_police_stations,
     }
 
 
-def get_nearest_hospitals(
+def build_provider_failure_response(
+    latitude: float,
+    longitude: float,
+    radius_meters: int,
+    message: str,
+):
+    return {
+        "source_latitude": latitude,
+        "source_longitude": longitude,
+        "radius_meters": radius_meters,
+        "provider": "openstreetmap_overpass",
+        "cache_status": "miss",
+        "provider_status": "unavailable",
+        "provider_error": message,
+        "count": 0,
+        "police_stations": [],
+    }
+
+
+def get_nearest_police_stations(
     latitude: float,
     longitude: float,
     limit: int = 5,
@@ -269,7 +312,7 @@ def get_nearest_hospitals(
     last_response = None
 
     for search_radius in get_radius_sequence(radius_meters):
-        cached_response = get_cached_hospital_response(
+        cached_response = get_cached_police_response(
             latitude,
             longitude,
             limit,
@@ -284,13 +327,31 @@ def get_nearest_hospitals(
 
             continue
 
-        response = fetch_and_normalize_nearest_hospitals(
-            latitude,
-            longitude,
-            limit,
-            search_radius,
-        )
-        set_cached_hospital_response(
+        try:
+            response = fetch_and_normalize_nearest_police_stations(
+                latitude,
+                longitude,
+                limit,
+                search_radius,
+            )
+        except PoliceProviderError as error:
+            response = build_provider_failure_response(
+                latitude,
+                longitude,
+                search_radius,
+                str(error),
+            )
+            set_cached_police_response(
+                latitude,
+                longitude,
+                limit,
+                search_radius,
+                response,
+                POLICE_PROVIDER_FAILURE_CACHE_TTL_SECONDS,
+            )
+            return response
+
+        set_cached_police_response(
             latitude,
             longitude,
             limit,
@@ -318,7 +379,7 @@ def get_tourist_location_from_redis(tourist_id: str):
     }
 
 
-def get_nearest_hospitals_for_tourist(
+def get_nearest_police_stations_for_tourist(
     tourist_id: str,
     limit: int = 5,
     radius_meters: int = DEFAULT_SEARCH_RADIUS_METERS,
@@ -328,7 +389,7 @@ def get_nearest_hospitals_for_tourist(
     if tourist_location is None:
         return None
 
-    return get_nearest_hospitals(
+    return get_nearest_police_stations(
         tourist_location["latitude"],
         tourist_location["longitude"],
         limit,

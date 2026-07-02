@@ -9,6 +9,7 @@ import Legend from "./Legend";
 import RecenterButton from "./RecenterButton";
 import { sendLocation } from "../services/locationService";
 import { getNearestHospitals } from "../services/hospitalService";
+import { getNearestPoliceStations } from "../services/policeService";
 import { calculateDistance } from "../utils/distance";
 
 const hospitalIcon = L.divIcon({
@@ -22,6 +23,31 @@ const hospitalIcon = L.divIcon({
   iconAnchor: [13, 13],
   popupAnchor: [0, -16],
 });
+
+const policeIcon = L.divIcon({
+  className: "police-marker",
+  html: `
+    <div class="police-marker__pin">
+      <span>★</span>
+    </div>
+  `,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
+  popupAnchor: [0, -16],
+});
+
+const SERVICE_SEARCH_RADIUS_METERS = 10000;
+const SERVICE_RESULT_LIMIT = 10;
+const SERVICE_REFETCH_DISTANCE_METERS = 1000;
+
+function buildNearbyRequestKey(location, radiusMeters, limit) {
+  return [
+    location[0].toFixed(2),
+    location[1].toFixed(2),
+    radiusMeters,
+    limit,
+  ].join(":");
+}
 
 function MapView() {
   const [location, setLocation] = useState([20.5937, 78.9629]);
@@ -42,11 +68,17 @@ function MapView() {
   const [layerPanelOpen, setLayerPanelOpen] = useState(false);
   const [hospitals, setHospitals] = useState([]);
   const [hospitalLayerStatus, setHospitalLayerStatus] = useState("idle");
+  const [policeStations, setPoliceStations] = useState([]);
+  const [policeLayerStatus, setPoliceLayerStatus] = useState("idle");
 
   const locationRef = useRef(location);
   const lastSentLocationRef = useRef(null);
   const lastHospitalFetchLocationRef = useRef(null);
   const hospitalRequestInFlightRef = useRef(false);
+  const lastHospitalRequestKeyRef = useRef(null);
+  const lastPoliceFetchLocationRef = useRef(null);
+  const policeRequestInFlightRef = useRef(false);
+  const lastPoliceRequestKeyRef = useRef(null);
 
   const loadCurrentLocation = () => {
 
@@ -147,6 +179,7 @@ function MapView() {
         setHospitals([]);
         setHospitalLayerStatus("idle");
         lastHospitalFetchLocationRef.current = null;
+        lastHospitalRequestKeyRef.current = null;
         return;
     }
 
@@ -161,18 +194,34 @@ function MapView() {
                 currentLocation
             );
 
-            if (distance < 1000) return;
+            if (distance < SERVICE_REFETCH_DISTANCE_METERS) return;
         }
+
+        const requestKey = buildNearbyRequestKey(
+            currentLocation,
+            SERVICE_SEARCH_RADIUS_METERS,
+            SERVICE_RESULT_LIMIT,
+        );
+
+        if (lastHospitalRequestKeyRef.current === requestKey) return;
 
         setHospitalLayerStatus("loading");
         hospitalRequestInFlightRef.current = true;
+        lastHospitalRequestKeyRef.current = requestKey;
 
         const response = await getNearestHospitals({
             latitude: currentLocation[0],
             longitude: currentLocation[1],
-            limit: 10,
-            radiusMeters: 10000,
+            limit: SERVICE_RESULT_LIMIT,
+            radiusMeters: SERVICE_SEARCH_RADIUS_METERS,
         });
+
+        if (!response) {
+            setHospitalLayerStatus("error");
+            hospitalRequestInFlightRef.current = false;
+            lastHospitalRequestKeyRef.current = null;
+            return;
+        }
 
         console.log("Hospital API response:", response);
         const nextHospitals = response?.hospitals ?? [];
@@ -186,9 +235,80 @@ function MapView() {
     fetchHospitals().catch((error) => {
         console.error("Hospital layer error:", error);
         hospitalRequestInFlightRef.current = false;
+        lastHospitalRequestKeyRef.current = null;
         setHospitalLayerStatus("error");
     });
   }, [layers.hospital, location]);
+
+  useEffect(() => {
+    if (!layers.police) {
+        setPoliceStations([]);
+        setPoliceLayerStatus("idle");
+        lastPoliceFetchLocationRef.current = null;
+        lastPoliceRequestKeyRef.current = null;
+        return;
+    }
+
+    const fetchPoliceStations = async () => {
+        const currentLocation = locationRef.current;
+        if (!currentLocation) return;
+        if (policeRequestInFlightRef.current) return;
+
+        if (lastPoliceFetchLocationRef.current !== null) {
+            const distance = calculateDistance(
+                lastPoliceFetchLocationRef.current,
+                currentLocation
+            );
+
+            if (distance < SERVICE_REFETCH_DISTANCE_METERS) return;
+        }
+
+        const requestKey = buildNearbyRequestKey(
+            currentLocation,
+            SERVICE_SEARCH_RADIUS_METERS,
+            SERVICE_RESULT_LIMIT,
+        );
+
+        if (lastPoliceRequestKeyRef.current === requestKey) return;
+
+        setPoliceLayerStatus("loading");
+        policeRequestInFlightRef.current = true;
+        lastPoliceRequestKeyRef.current = requestKey;
+
+        const response = await getNearestPoliceStations({
+            latitude: currentLocation[0],
+            longitude: currentLocation[1],
+            limit: SERVICE_RESULT_LIMIT,
+            radiusMeters: SERVICE_SEARCH_RADIUS_METERS,
+        });
+
+        if (!response) {
+            setPoliceLayerStatus("error");
+            policeRequestInFlightRef.current = false;
+            return;
+        }
+
+        console.log("Police API response:", response);
+        const nextPoliceStations = response?.police_stations ?? [];
+
+        setPoliceStations(nextPoliceStations);
+        setPoliceLayerStatus(
+            response.provider_status === "unavailable"
+                ? "unavailable"
+                : nextPoliceStations.length > 0
+                    ? "loaded"
+                    : "empty"
+        );
+        lastPoliceFetchLocationRef.current = currentLocation;
+        policeRequestInFlightRef.current = false;
+    };
+
+    fetchPoliceStations().catch((error) => {
+        console.error("Police layer error:", error);
+        policeRequestInFlightRef.current = false;
+        setPoliceLayerStatus("error");
+    });
+  }, [layers.police, location]);
 
   return (
     <div
@@ -235,6 +355,31 @@ function MapView() {
                 {hospitalLayerStatus === "error" && "Could not load hospitals"}
             </div>
         )}
+        {layers.police && policeLayerStatus !== "loaded" && (
+            <div
+                style={{
+                    position: "absolute",
+                    left: "14px",
+                    bottom: layers.hospital && hospitalLayerStatus !== "loaded"
+                        ? "78px"
+                        : "28px",
+                    zIndex: 1000,
+                    background: "#fff",
+                    color: "#333",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    boxShadow: "0 3px 12px rgba(0,0,0,0.16)",
+                    padding: "8px 12px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                }}
+            >
+                {policeLayerStatus === "loading" && "Finding nearby police stations..."}
+                {policeLayerStatus === "empty" && "No police stations found nearby"}
+                {policeLayerStatus === "unavailable" && "Police data provider is slow right now"}
+                {policeLayerStatus === "error" && "Could not load police stations"}
+            </div>
+        )}
         <MapContainer
           center={location}
           zoom={5}
@@ -272,6 +417,27 @@ function MapView() {
                   <>
                     <br />
                     Phone: {hospital.emergency_phone}
+                  </>
+                )}
+              </Popup>
+            </Marker>
+          ))}
+          {layers.police && policeStations.map((policeStation) => (
+            <Marker
+              key={policeStation.id}
+              position={[policeStation.latitude, policeStation.longitude]}
+              icon={policeIcon}
+            >
+              <Popup>
+                <strong>{policeStation.name}</strong>
+                <br />
+                {policeStation.distance_km} km away
+                <br />
+                {policeStation.address}
+                {policeStation.phone && (
+                  <>
+                    <br />
+                    Phone: {policeStation.phone}
                   </>
                 )}
               </Popup>
