@@ -68,5 +68,73 @@ services:
     depends_on:
       - backend
 
+  postgres:
+    image: postgres:17
+
+    container_name: postgres-container
+
+    restart: unless-stopped
+
+    networks: 
+      - tourist-network
+
+    ports:
+      - "5432:5432"
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ./ai-service
+
+    image: tourist-ai-service
+
+    container_name: tourist-ai-container
+
+    restart: unless-stopped
+
+    networks:
+      - tourist-network
+
+    ports:
+      - "8001:8001"
+
+    environment:
+      PYTHONUNBUFFERED: 1
+
+    env_file:
+      - ./ai-service/.env
+
+    volumes:
+      - ./ai-service:/app
+      - ./shared:/app/shared:ro
+
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8001
+      --reload
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 networks:
   tourist-network:
+
+volumes:
+  postgres_data:

@@ -1,0 +1,3 @@
+CREATE DATABASE ai_db;
+
+CREATE DATABASE blockchain_db;
