@@ -1,0 +1,590 @@
+Folder PATH listing for volume Windows 
+Volume serial number is 000000F9 84AF:5727
+C:.
+|   .env
+|   .env.example
+|   .gitignore
+|   docker
+|   docker-compose.prod.yml
+|   docker-compose.yml
+|   Makefile
+|   newFolderStruct.txt
+|   new_repo_file.txt
+|   README.md
+|   
++---ai-service
+|   |   .dockerignore
+|   |   .env
+|   |   .env.example
+|   |   alembic.ini
+|   |   Dockerfile
+|   |   README.md
+|   |   requirements-dev.txt
+|   |   requirements.txt
+|   |            
+|   +---alembic
+|   |   |   env.py
+|   |   |   README
+|   |   |   script.py.mako
+|   |   |   
+|   |   +---versions
+|   |   |   |   3e6a7d77aa4b_initial_database_schema.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           3e6a7d77aa4b_initial_database_schema.cpython-310.pyc
+|   |   |           
+|   |   \---__pycache__
+|   |           env.cpython-310.pyc
+|   |           
+|   +---app
+|   |   |   main.py
+|   |   |   __init__.py
+|   |   |   
+|   |   +---api
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---v1
+|   |   |       |   router.py
+|   |   |       |   __init__.py
+|   |   |       |   
+|   |   |       \---routes
+|   |   |               analytics.py
+|   |   |               anomaly.py
+|   |   |               geofence.py
+|   |   |               health.py
+|   |   |               risk.py
+|   |   |               safety_score.py
+|   |   |               __init__.py
+|   |   |               
+|   |   +---core
+|   |   |   |   config.py
+|   |   |   |   exceptions.py
+|   |   |   |   logging.py
+|   |   |   |   security.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---enums
+|   |   |   |   |   alert_severity.py
+|   |   |   |   |   alert_status.py
+|   |   |   |   |   hazard.py
+|   |   |   |   |   risk.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |   \---__pycache__
+|   |   |   |           alert_severity.cpython-310.pyc
+|   |   |   |           alert_status.cpython-310.pyc
+|   |   |   |           hazard.cpython-310.pyc
+|   |   |   |           risk.cpython-310.pyc
+|   |   |   |           __init__.cpython-310.pyc
+|   |   |   |           
+|   |   |   \---__pycache__
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---db
+|   |   |   |   base.py
+|   |   |   |   database.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---crud
+|   |   |   |       anomaly.py
+|   |   |   |       base_crud.py
+|   |   |   |       location.py
+|   |   |   |       risk.py
+|   |   |   |       safety_score.py
+|   |   |   |       __init__.py
+|   |   |   |       
+|   |   |   \---__pycache__
+|   |   |           base.cpython-310.pyc
+|   |   |           database.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---middleware
+|   |   |       auth.py
+|   |   |       rate_limiter.py
+|   |   |       request_logger.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---ml
+|   |   |       classifiers.py
+|   |   |       features.py
+|   |   |       inference.py
+|   |   |       preprocessors.py
+|   |   |       train.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---models
+|   |   |   |   anomaly_alert.py
+|   |   |   |   location_snapshot.py
+|   |   |   |   risk_record.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           anomaly_alert.cpython-310.pyc
+|   |   |           location_snapshot.cpython-310.pyc
+|   |   |           risk_record.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---repositories
+|   |   |   |   anomaly_alert_repository.py
+|   |   |   |   base_repository.py
+|   |   |   |   location_snapshot_repository.py
+|   |   |   |   risk_record_repository.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           anomaly_alert_repository.cpython-310.pyc
+|   |   |           base_repository.cpython-310.pyc
+|   |   |           location_snapshot_repository.cpython-310.pyc
+|   |   |           risk_record_repository.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---routes
+|   |   |   |   test_db.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           test_db.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---schemas
+|   |   |   |   ai_result.py
+|   |   |   |   anomaly_alert.py
+|   |   |   |   location_snapshot.py
+|   |   |   |   risk_record.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           ai_result.cpython-310.pyc
+|   |   |           anomaly_alert.cpython-310.pyc
+|   |   |           location_snapshot.cpython-310.pyc
+|   |   |           risk_record.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---services
+|   |   |   |   earthquake_service.py
+|   |   |   |   flood_service.py
+|   |   |   |   landslide_service.py
+|   |   |   |   location_analysis_service.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           earthquake_service.cpython-310.pyc
+|   |   |           flood_service.cpython-310.pyc
+|   |   |           landslide_service.cpython-310.pyc
+|   |   |           location_analysis_service.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---tasks
+|   |   |       anomaly_tasks.py
+|   |   |       celery_app.py
+|   |   |       score_tasks.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---tests
+|   |   |       __init__.py
+|   |   |       
+|   |   +---utils
+|   |   |       geo_utils.py
+|   |   |       helpers.py
+|   |   |       validators.py
+|   |   |       __init__.py
+|   |   |       
+|   |   \---__pycache__
+|   |           main.cpython-310.pyc
+|   |           __init__.cpython-310.pyc
+|   |           
+|   +---data
+|   |   +---processed
+|   |   |       .gitkeep
+|   |   |       
+|   |   +---raw
+|   |   |       .gitkeep
+|   |   |       
+|   |   \---sample_inputs
+|   |           .gitkeep
+|   |           
+|   +---models
+|   |   \---saved_models
+|   |           .gitkeep
+|   |           
+|   +---scripts
+|   |       generate_sample_data.py
+|   |       seed_danger_zones.py
+|   |       
+|   \---shared
++---backend-service
+|   |   .dockerignore
+|   |   .env
+|   |   Dockerfile
+|   |   main.py
+|   |   requirements.txt
+|   |   
+|   +---app
+|   |   |   .gitkeep
+|   |   |   __init__.py
+|   |   |   
+|   |   +---api
+|   |   |   |   router.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   +---routes
+|   |   |   |   |   health.py
+|   |   |   |   |   hospital.py
+|   |   |   |   |   location.py
+|   |   |   |   |   police.py
+|   |   |   |   |   __init__.py
+|   |   |   |   |   
+|   |   |   |   \---__pycache__
+|   |   |   |           health.cpython-310.pyc
+|   |   |   |           hospital.cpython-310.pyc
+|   |   |   |           hospital.cpython-310.pyc.2359645368400
+|   |   |   |           location.cpython-310.pyc
+|   |   |   |           police.cpython-310.pyc
+|   |   |   |           __init__.cpython-310.pyc
+|   |   |   |           
+|   |   |   \---__pycache__
+|   |   |           router.cpython-310.pyc
+|   |   |           router.cpython-310.pyc.2359645749488
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---core
+|   |   |   |   config.py
+|   |   |   |   redis.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           config.cpython-310.pyc.2359645749488
+|   |   |           redis.cpython-310.pyc
+|   |   |           
+|   |   +---db
+|   |   |   |   .gitkeep
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           __init__.cpython-310.pyc.2359645749488
+|   |   |           
+|   |   +---schemas
+|   |   |   |   hospital.py
+|   |   |   |   location.py
+|   |   |   |   police.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           hospital.cpython-310.pyc
+|   |   |           hospital.cpython-310.pyc.2359645368288
+|   |   |           location.cpython-310.pyc
+|   |   |           police.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   +---services
+|   |   |   |   hospital_service.py
+|   |   |   |   location_service.py
+|   |   |   |   police_service.py
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---__pycache__
+|   |   |           hospital_service.cpython-310.pyc
+|   |   |           hospital_service.cpython-310.pyc.2359645368288
+|   |   |           location_service.cpython-310.pyc
+|   |   |           police_service.cpython-310.pyc
+|   |   |           __init__.cpython-310.pyc
+|   |   |           
+|   |   \---__pycache__
+|   |           __init__.cpython-310.pyc
+|   |           
+|   +---scripts
+|   |   |   test_nearest_hospital_from_redis.py
+|   |   |   
+|   |   \---__pycache__
+|   |           test_nearest_hospital_from_redis.cpython-310.pyc.2359645300272
+|   |           
+|   +---shared
+|   +---tests
+|   |       .gitkeep
+|   |       __init__.py
+|   |       
+|   \---__pycache__
+|           main.cpython-310.pyc
+|           
++---blockchain-service
+|   |   .env.example
+|   |   alembic.ini
+|   |   Dockerfile
+|   |   README.md
+|   |   requirements-dev.txt
+|   |   requirements.txt
+|   |   
+|   +---alembic
+|   |   |   env.py
+|   |   |   
+|   |   \---versions
+|   |           .gitkeep
+|   |           
+|   \---app
+|       |   main.py
+|       |   __init__.py
+|       |   
+|       +---api
+|       |   |   __init__.py
+|       |   |   
+|       |   \---v1
+|       |       |   router.py
+|       |       |   __init__.py
+|       |       |   
+|       |       \---routes
+|       |               generate.py
+|       |               health.py
+|       |               verify.py
+|       |               __init__.py
+|       |               
+|       +---core
+|       |       config.py
+|       |       exceptions.py
+|       |       logging.py
+|       |       security.py
+|       |       __init__.py
+|       |       
+|       +---db
+|       |   |   base.py
+|       |   |   database.py
+|       |   |   __init__.py
+|       |   |   
+|       |   +---crud
+|       |   |       hash_record.py
+|       |   |       __init__.py
+|       |   |       
+|       |   \---models
+|       |           hash_record.py
+|       |           __init__.py
+|       |           
+|       +---middleware
+|       |       auth.py
+|       |       rate_limiter.py
+|       |       __init__.py
+|       |       
+|       +---schemas
+|       |       common.py
+|       |       generate.py
+|       |       verify.py
+|       |       __init__.py
+|       |       
+|       +---services
+|       |       hash_service.py
+|       |       verification_service.py
+|       |       __init__.py
+|       |       
+|       +---tests
+|       |   |   __init__.py
+|       |   |   
+|       |   +---integration
+|       |   |       __init__.py
+|       |   |       
+|       |   \---unit
+|       |           __init__.py
+|       |           
+|       \---utils
+|               crypto.py
+|               __init__.py
+|               
++---docs
+|   |   api-spec.md
+|   |   architecture.md
+|   |   database_design.md
+|   |   deployment.md
+|   |   
+|   \---runbooks
+|           .gitkeep
+|           
++---Extras
+|       Ai_Service_Repo_generate.py
+|       Blockchain_model_service_repo_generate.py
+|       Final_AIBlockchain.pdf
+|       Folder_Structure.txt
+|       GitHub Workflow Setup.pdf
+|       gitignore Syntax Explained.pdf
+|       Monitoring_and_restAll.py
+|       production_repo_structure_tourist_safety.html
+|       Roadmap.pdf
+|       Roadmap_to_implement.png
+|       Screenshot 2026-06-22 122138.png
+|       Screenshot 2026-06-28 122054.png
+|       Screenshot 2026-06-28 131517.png
+|       Screenshot 2026-06-28 132428.png
+|       Screenshot 2026-06-28 151609.png
+|       Screenshot 2026-06-28 154848.png
+|       Screenshot 2026-06-28 183658.png
+|       Screenshot 2026-06-28 183705.png
+|       Tourist_Safety_Development_Roadmap.png
+|       
++---frontend
+|   |   .dockerignore
+|   |   .env
+|   |   .oxlintrc.json
+|   |   Dockerfile
+|   |   frontend_structure.txt
+|   |   index.html
+|   |   package-lock.json
+|   |   package.json
+|   |   README.md
+|   |   vite.config.js
+|   |
+|   +---public
+|   |   |   favicon.svg
+|   |   |   icons.svg
+|   |   |   
+|   |   \---geojson
+|   |           zone2.geojson
+|   |           zone3.geojson
+|   |           zone4.geojson
+|   |           zone5.geojson
+|   |           
+|   \---src
+|       |   .env
+|       |   App.css
+|       |   App.jsx
+|       |   index.css
+|       |   main.jsx
+|       |   
+|       +---assets
+|       |       hero.png
+|       |       layers.png
+|       |       react.svg
+|       |       vite.svg
+|       |       
+|       +---components
+|       |       ChangeView.jsx
+|       |       EarthquakeLayer.jsx
+|       |       HazardLayer.jsx
+|       |       LayerCard.jsx
+|       |       LayerControl.jsx
+|       |       LayerSection.jsx
+|       |       Legend.jsx
+|       |       MapView.jsx
+|       |       RecenterButton.jsx
+|       |       TouristMarker.jsx
+|       |       
+|       +---services
+|       |       hospitalService.js
+|       |       locationService.js
+|       |       policeService.js
+|       |       
+|       \---utils
+|               distance.js
+|               
++---infra
+|   +---nginx
+|   |   |   nginx.conf
+|   |   |   
+|   |   \---conf.d
+|   |           ai-service.conf
+|   |           blockchain-service.conf
+|   |           model-service.conf
+|   |           
+|   +---postgres
+|   |       init.sql
+|   |       postgresql.conf
+|   |       
+|   \---redis
+|           redis.conf
+|           
++---model-service
+|   |   Dockerfile
+|   |   README.md
+|   |   requirements-dev.txt
+|   |   requirements.txt
+|   |   
+|   +---app
+|   |   |   main.py
+|   |   |   __init__.py
+|   |   |   
+|   |   +---api
+|   |   |   |   __init__.py
+|   |   |   |   
+|   |   |   \---v1
+|   |   |       |   router.py
+|   |   |       |   __init__.py
+|   |   |       |   
+|   |   |       \---routes
+|   |   |               health.py
+|   |   |               predict.py
+|   |   |               __init__.py
+|   |   |               
+|   |   +---core
+|   |   |       config.py
+|   |   |       exceptions.py
+|   |   |       security.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---ml
+|   |   |       classifiers.py
+|   |   |       features.py
+|   |   |       inference.py
+|   |   |       preprocessors.py
+|   |   |       train.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---schemas
+|   |   |       common.py
+|   |   |       predict.py
+|   |   |       __init__.py
+|   |   |       
+|   |   +---services
+|   |   |       predictor_service.py
+|   |   |       __init__.py
+|   |   |       
+|   |   \---tests
+|   |       |   __init__.py
+|   |       |   
+|   |       +---integration
+|   |       |       __init__.py
+|   |       |       
+|   |       \---unit
+|   |               __init__.py
+|   |               
+|   \---models
+|       \---saved_models
+|               .gitkeep
+|               
++---monitoring
+|   +---grafana
+|   |   \---dashboards
+|   |           ai-service.json
+|   |           blockchain-service.json
+|   |           
+|   +---prometheus
+|   |       prometheus.yml
+|   |       
+|   \---tracing
+|       \---jaeger
+|               .gitkeep
+|               
++---postman
+|       tourist-safety.postman_collection.json
+|       
++---shared
+|   |   Shared_backend_infra.py
+|   |   
+|   +---constants
+|   |       danger_zones.py
+|   |       risk_levels.py
+|   |       __init__.py
+|   |       
+|   +---contracts
+|   |       request_examples.json
+|   |       response_examples.json
+|   |       
+|   +---events
+|   |       anomaly_detected.py
+|   |       sos_triggered.py
+|   |       tourist_created.py
+|   |       tourist_moved.py
+|   |       __init__.py
+|   |       
+|   \---utils
+|           distance.py
+|           
+\---terraform
+    |   variables.tf
+    |   
+    \---aws
+            .gitkeep
+            

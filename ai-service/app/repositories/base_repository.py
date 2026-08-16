@@ -1,120 +1,78 @@
-from typing import Generic, Type, TypeVar
-from uuid import UUID
+"""
+Generic base repository providing standard CRUD operations.
 
-from sqlalchemy.exc import SQLAlchemyError
+All domain repositories inherit from this class so that common
+patterns (get by id, list, create, delete) are written once.
+"""
+
+import uuid
+from typing import Generic, TypeVar, Type, List, Optional
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.base import Base
 
-T = TypeVar("T")
+ModelType = TypeVar("ModelType", bound=Base)
 
 
-class BaseRepository(Generic[T]):
+class BaseRepository(Generic[ModelType]):
     """
-    Base repository providing common database
-    operations shared across repositories.
+    Base repository with reusable CRUD helpers.
+
+    Parameters
+    ----------
+    db : Session
+        Active SQLAlchemy session (injected via FastAPI ``Depends``).
+    model : Type[ModelType]
+        The ORM model class this repository manages.
     """
 
-    def __init__(
-        self,
-        db: Session,
-        model: Type[T],
-    ):
+    def __init__(self, db: Session, model: Type[ModelType]):
         self.db = db
         self.model = model
 
-    # --------------------------------------------------
-    # COMMON SESSION HELPERS
-    # --------------------------------------------------
+    # ── Read ──────────────────────────────────────────
 
-    def add(
-        self,
-        instance: T,
-    ) -> None:
-        """
-        Add an ORM instance to the current session.
-        """
+    def get_by_id(self, record_id: uuid.UUID) -> Optional[ModelType]:
+        """Fetch a single record by primary key."""
+        return self.db.get(self.model, record_id)
 
-        self.db.add(instance)
+    def list_all(
+        self, *, limit: int = 100, offset: int = 0
+    ) -> List[ModelType]:
+        """Return a paginated list of records."""
+        stmt = select(self.model).limit(limit).offset(offset)
+        return list(self.db.scalars(stmt).all())
 
-    def commit(self) -> None:
-        """
-        Commit the current transaction.
-        """
+    # ── Create ────────────────────────────────────────
 
-        try:
-            self.db.commit()
+    def create(self, entity: ModelType) -> ModelType:
+        """Persist a new entity and return it with server defaults."""
+        self.db.add(entity)
+        self.db.commit()
+        self.db.refresh(entity)
+        return entity
 
-        except SQLAlchemyError:
-            self.db.rollback()
-            raise
+    # ── Update ────────────────────────────────────────
 
-    def flush(self) -> None:
-        """
-        Flush pending changes to the database
-        without committing the transaction.
-        """
+    def save(self, entity: ModelType) -> ModelType:
+        """Flush changes on an already-tracked entity."""
+        self.db.commit()
+        self.db.refresh(entity)
+        return entity
 
-        self.db.flush()
+    # ── Delete ────────────────────────────────────────
 
-    def refresh(
-        self,
-        instance: T,
-    ) -> None:
-        """
-        Refresh an ORM instance from the database.
-        """
+    def delete(self, entity: ModelType) -> None:
+        """Remove an entity from the database."""
+        self.db.delete(entity)
+        self.db.commit()
 
-        self.db.refresh(instance)
-
-    # --------------------------------------------------
-    # COMMON READ OPERATIONS
-    # --------------------------------------------------
-
-    def get_by_id(
-        self,
-        entity_id: UUID,
-    ) -> T | None:
-        """
-        Returns an entity by its primary key.
-        """
-
-        return self.db.get(
-            self.model,
-            entity_id,
-        )
-
-    def exists(
-        self,
-        entity_id: UUID,
-    ) -> bool:
-        """
-        Checks whether an entity exists.
-        """
-
-        return self.get_by_id(entity_id) is not None
-
-    # --------------------------------------------------
-    # COMMON DELETE
-    # --------------------------------------------------
-
-    def delete(
-        self,
-        entity_id: UUID,
-    ) -> bool:
-        """
-        Deletes an entity by its primary key.
-
-        Returns:
-            True if deleted successfully,
-            False if the entity does not exist.
-        """
-
-        instance = self.get_by_id(entity_id)
-
-        if instance is None:
-            return False
-
-        self.db.delete(instance)
-        self.commit()
-
-        return True
+    def delete_by_id(self, record_id: uuid.UUID) -> bool:
+        """Delete by primary key. Returns True if a row was found."""
+        entity = self.get_by_id(record_id)
+        if entity:
+            self.delete(entity)
+            return True
+        return False

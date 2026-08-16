@@ -1,63 +1,49 @@
+"""
+LocationSnapshot ORM model.
+
+Stores a point-in-time GPS reading for a tourist.
+This is the foundational table — RiskRecords and AnomalyAlerts
+are derived from snapshots.
+"""
+
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String, func, UUID
+from sqlalchemy import String, Float, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
 
-from app.db import Base
+from app.db.base import Base
 
 
 class LocationSnapshot(Base):
-    """
-    Stores an immutable snapshot of a tourist's location
-    at the moment an AI analysis is triggered.
-
-    This table stores historical evidence only.
-    It is NOT the tourist's live location.
-    """
-
     __tablename__ = "location_snapshot"
 
-    # Primary Key
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4,
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-
-    # External reference from the main backend
     tourist_id: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-        index=True,
+        String(100), nullable=False, index=True
     )
-
-    # GPS Coordinates
-    latitude: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    longitude: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    # Time when the location was observed
+    latitude: Mapped[float] = mapped_column(Float, nullable=False)
+    longitude: Mapped[float] = mapped_column(Float, nullable=False)
     captured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         server_default=func.now(),
+        nullable=False,
         index=True,
     )
-
-    # Origin of this snapshot
     snapshot_source: Mapped[str] = mapped_column(
-        String(30),
-        nullable=False,
-        default="GPS",
+        String(30), nullable=False, default="GPS"
     )
 
-    risk_records: Mapped[list["RiskRecord"]] = relationship(
-        back_populates="snapshot",
+    # ── Relationships ─────────────────────────────────
+    risk_records = relationship(
+        "RiskRecord", back_populates="snapshot", cascade="all, delete-orphan"
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<LocationSnapshot tourist={self.tourist_id} "
+            f"lat={self.latitude} lon={self.longitude}>"
+        )

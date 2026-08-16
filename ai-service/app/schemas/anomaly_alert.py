@@ -1,92 +1,42 @@
+"""Pydantic schemas for AnomalyAlert CRUD operations."""
+
+import uuid
 from datetime import datetime
-from uuid import UUID
+from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-)
+from app.core.enums.alert_severity import AlertSeverity
+from app.core.enums.alert_status import AlertStatus
 
-from app.core.enums import (
-    AlertSeverity,
-    AlertStatus,
-)
-
-
-# ==================================================
-# Base Schema
-# ==================================================
 
 class AnomalyAlertBase(BaseModel):
-    """
-    Common fields shared by multiple
-    AnomalyAlert schemas.
-    """
-
-    risk_record_id: UUID = Field(
-        ...,
-        description="RiskRecord associated with this alert.",
+    """Fields shared by create and read schemas."""
+    risk_record_id: uuid.UUID = Field(
+        ..., description="FK to the parent RiskRecord"
     )
-
     title: str = Field(
-        ...,
-        min_length=1,
-        max_length=200,
-        description="Short title of the alert.",
-        examples=["High Earthquake Risk"],
+        ..., max_length=200, description="Short alert title"
     )
-
     message: str = Field(
-        ...,
-        min_length=1,
-        description="Detailed alert message.",
-        examples=[
-            "The tourist is currently located inside a high seismic hazard zone."
-        ],
+        ..., description="Detailed alert message"
     )
-
     severity: AlertSeverity = Field(
-        ...,
-        description="Severity level of the alert.",
-        examples=["HIGH"],
+        ..., description="Alert severity level"
     )
 
-    status: AlertStatus = Field(
-        default=AlertStatus.ACTIVE,
-        description="Current lifecycle status of the alert.",
-        examples=["ACTIVE"],
-    )
-
-
-# ==================================================
-# Create Schema
-# ==================================================
 
 class AnomalyAlertCreate(AnomalyAlertBase):
-    """
-    Request schema used when creating
-    a new AnomalyAlert.
-    """
+    """Schema for creating a new alert."""
+    status: AlertStatus = Field(
+        default=AlertStatus.ACTIVE, description="Initial alert status"
+    )
 
-    pass
-
-
-# ==================================================
-# Read Schema
-# ==================================================
 
 class AnomalyAlertRead(AnomalyAlertBase):
-    """
-    Response schema returned after
-    reading an AnomalyAlert.
-    """
-
-    id: UUID
-
+    """Schema returned from the API."""
+    id: uuid.UUID
+    status: AlertStatus
     created_at: datetime
+    resolved_at: Optional[datetime] = None
 
-    resolved_at: datetime | None = None
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
+    model_config = ConfigDict(from_attributes=True)

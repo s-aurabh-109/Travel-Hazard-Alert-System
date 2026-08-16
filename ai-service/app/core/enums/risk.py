@@ -1,10 +1,11 @@
-from enum import Enum
+"""Risk level enumeration."""
 
-class RiskLevel(str, Enum):
-    """
-    Represents the severity level of a predicted hazard.
-    """
+import enum
 
+
+class RiskLevel(str, enum.Enum):
+    """Composite risk classification levels."""
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+    CRITICAL = "CRITICAL"

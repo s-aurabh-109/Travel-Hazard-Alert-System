@@ -1,11 +1,10 @@
-from enum import Enum
+"""Alert severity enumeration."""
+
+import enum
 
 
-class AlertSeverity(str, Enum):
-    """
-    Represents the severity of an anomaly alert.
-    """
-
+class AlertSeverity(str, enum.Enum):
+    """Severity levels for alerts and danger zones."""
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"

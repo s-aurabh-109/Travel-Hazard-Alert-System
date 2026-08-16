@@ -1,11 +1,11 @@
-from enum import Enum
+"""Alert status enumeration."""
+
+import enum
 
 
-class AlertStatus(str, Enum):
-    """
-    Represents the lifecycle state of an anomaly alert.
-    """
-
+class AlertStatus(str, enum.Enum):
+    """Lifecycle status of an anomaly alert."""
     ACTIVE = "ACTIVE"
     ACKNOWLEDGED = "ACKNOWLEDGED"
     RESOLVED = "RESOLVED"
+    EXPIRED = "EXPIRED"

@@ -1,167 +1,118 @@
-from uuid import UUID
+"""
+Repository for AnomalyAlert persistence.
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.exc import SQLAlchemyError
-from .base_repository import BaseRepository
+Provides domain-specific queries on top of BaseRepository CRUD.
+"""
 
-from app.models import (
-    AnomalyAlert,
-    RiskRecord,
-)
-from app.core.enums import (
-    AlertSeverity,
-    AlertStatus,
-)
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+
+from sqlalchemy import select, func
+from sqlalchemy.orm import Session
+
+from app.repositories.base_repository import BaseRepository
+from app.models.anomaly_alert import AnomalyAlert
+from app.core.enums.alert_severity import AlertSeverity
+from app.core.enums.alert_status import AlertStatus
 
 
-class AnomalyAlertRepository(
-    BaseRepository[AnomalyAlert]
-):
-    """
-    Repository responsible for all database
-    operations related to AnomalyAlert.
-    """
-
+class AnomalyAlertRepository(BaseRepository[AnomalyAlert]):
     def __init__(self, db: Session):
+        super().__init__(db=db, model=AnomalyAlert)
 
-        super().__init__(
-            db=db,
-            model=AnomalyAlert,
+    # ── Domain queries ────────────────────────────────
+
+    def get_alerts_by_tourist(
+        self, tourist_id: str
+    ) -> List[AnomalyAlert]:
+        """
+        Return all alerts for a tourist by joining through
+        risk_record → location_snapshot.
+        """
+        from app.models.risk_record import RiskRecord
+        from app.models.location_snapshot import LocationSnapshot
+
+        stmt = (
+            select(AnomalyAlert)
+            .join(RiskRecord, AnomalyAlert.risk_record_id == RiskRecord.id)
+            .join(LocationSnapshot, RiskRecord.snapshot_id == LocationSnapshot.id)
+            .where(LocationSnapshot.tourist_id == tourist_id)
+            .order_by(AnomalyAlert.created_at.desc())
         )
+        return list(self.db.scalars(stmt).all())
 
-    # --------------------------------------------------
-    # CREATE
-    # --------------------------------------------------
+    def get_active_alerts(self) -> List[AnomalyAlert]:
+        """Return all currently active (unresolved) alerts."""
+        stmt = (
+            select(AnomalyAlert)
+            .where(AnomalyAlert.status == AlertStatus.ACTIVE)
+            .order_by(AnomalyAlert.created_at.desc())
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_by_severity(
+        self, severity: AlertSeverity
+    ) -> List[AnomalyAlert]:
+        """Return alerts filtered by severity level."""
+        stmt = (
+            select(AnomalyAlert)
+            .where(AnomalyAlert.severity == severity)
+            .order_by(AnomalyAlert.created_at.desc())
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_recent_alerts(
+        self, *, hours: int = 24
+    ) -> List[AnomalyAlert]:
+        """Return alerts created within the last N hours."""
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        stmt = (
+            select(AnomalyAlert)
+            .where(AnomalyAlert.created_at >= cutoff)
+            .order_by(AnomalyAlert.created_at.desc())
+        )
+        return list(self.db.scalars(stmt).all())
 
     def create_alert(
         self,
-        risk_record_id: UUID,
+        risk_record_id: uuid.UUID,
         title: str,
         message: str,
         severity: AlertSeverity,
-        status: AlertStatus = AlertStatus.ACTIVE,
     ) -> AnomalyAlert:
-
+        """Create and persist a new anomaly alert."""
         alert = AnomalyAlert(
             risk_record_id=risk_record_id,
             title=title,
             message=message,
             severity=severity,
-            status=status,
+            status=AlertStatus.ACTIVE,
         )
+        return self.create(alert)
 
-        
-        self.db.add(alert)
-        self.db.commit()
-        self.db.refresh(alert)
-        return alert
+    def resolve_alert(self, alert_id: uuid.UUID) -> Optional[AnomalyAlert]:
+        """Mark an alert as resolved."""
+        alert = self.get_by_id(alert_id)
+        if alert:
+            alert.status = AlertStatus.RESOLVED
+            alert.resolved_at = datetime.now(timezone.utc)
+            return self.save(alert)
+        return None
 
-    # --------------------------------------------------
-    # READ
-    # --------------------------------------------------
+    def acknowledge_alert(self, alert_id: uuid.UUID) -> Optional[AnomalyAlert]:
+        """Mark an alert as acknowledged."""
+        alert = self.get_by_id(alert_id)
+        if alert:
+            alert.status = AlertStatus.ACKNOWLEDGED
+            return self.save(alert)
+        return None
 
-    def get_alerts_by_risk_record(
-        self,
-        risk_record_id: UUID,
-    ) -> list[AnomalyAlert]:
-
+    def count_active(self) -> int:
+        """Count currently active alerts."""
         stmt = (
-            select(AnomalyAlert)
-            .where(
-                AnomalyAlert.risk_record_id == risk_record_id
-            )
-            .order_by(
-                AnomalyAlert.created_at.desc()
-            )
+            select(func.count())
+            .select_from(AnomalyAlert)
+            .where(AnomalyAlert.status == AlertStatus.ACTIVE)
         )
-
-        return list(
-            self.db.scalars(stmt).all()
-        )
-
-    def get_active_alerts(
-        self,
-    ) -> list[AnomalyAlert]:
-
-        stmt = (
-            select(AnomalyAlert)
-            .where(
-                AnomalyAlert.status == AlertStatus.ACTIVE
-            )
-            .order_by(
-                AnomalyAlert.created_at.desc()
-            )
-        )
-
-        return list(
-            self.db.scalars(stmt).all()
-        )
-
-    def get_alerts_by_severity(
-        self,
-        severity: AlertSeverity,
-    ) -> list[AnomalyAlert]:
-
-        stmt = (
-            select(AnomalyAlert)
-            .where(
-                AnomalyAlert.severity == severity
-            )
-            .order_by(
-                AnomalyAlert.created_at.desc()
-            )
-        )
-
-        return list(
-            self.db.scalars(stmt).all()
-        )
-
-    def get_alerts_by_tourist(
-        self,
-        tourist_id: str,
-    ) -> list[AnomalyAlert]:
-
-        stmt = (
-            select(AnomalyAlert)
-            .join(RiskRecord)
-            .join(RiskRecord.snapshot)
-            .where(
-                RiskRecord.snapshot.has(
-                    tourist_id=tourist_id
-                )
-            )
-            .options(
-                joinedload(
-                    AnomalyAlert.risk_record
-                ).joinedload(
-                    RiskRecord.snapshot
-                )
-            )
-            .order_by(
-                AnomalyAlert.created_at.desc()
-            )
-        )
-
-        return list(
-            self.db.scalars(stmt).all()
-        )
-
-    def list_alerts(
-        self,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[AnomalyAlert]:
-
-        stmt = (
-            select(AnomalyAlert)
-            .order_by(
-                AnomalyAlert.created_at.desc()
-            )
-            .offset(offset)
-            .limit(limit)
-        )
-
-        return list(
-            self.db.scalars(stmt).all()
-        )
+        return self.db.scalar(stmt) or 0
