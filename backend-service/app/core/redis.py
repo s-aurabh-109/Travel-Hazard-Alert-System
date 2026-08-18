@@ -1,15 +1,16 @@
-import os
 import redis
-from dotenv import load_dotenv
-
-load_dotenv()
+from app.core.config import settings
 
 redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST", "localhost"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
     decode_responses=True,
 )
 
+
+def get_redis():
+    return redis_client
+
 # To Open Redis CLI: docker exec -it redis-container redis-cli
-#To get all keys: KEYS *
-#To get all values : HGETALL tourist:tourist_001
+# To get all keys: KEYS *
+# To get all values: HGETALL tourist:tourist_001

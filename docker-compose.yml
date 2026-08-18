@@ -31,6 +31,8 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      AI_SERVICE_URL: http://ai-service:8001
+      AI_SERVICE_TIMEOUT: 30
 
     volumes:
       - ./backend-service:/app
@@ -44,6 +46,7 @@ services:
 
     depends_on:
       - redis
+      - ai-service
 
   frontend:
     build:
