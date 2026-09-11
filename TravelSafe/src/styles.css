@@ -1,0 +1,120 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-sky-brand: var(--sky-brand);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-surface: var(--surface);
+  --font-sans: "Inter", "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 1.25rem;
+  --background: oklch(0.985 0.005 250);
+  --foreground: oklch(0.18 0.03 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.03 260);
+  --primary: oklch(0.55 0.22 262);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.24 0.03 260);
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.5 0.02 260);
+  --accent: oklch(0.95 0.02 250);
+  --accent-foreground: oklch(0.24 0.03 260);
+  --destructive: oklch(0.63 0.23 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 255);
+  --input: oklch(0.92 0.01 255);
+  --ring: oklch(0.55 0.22 262);
+
+  --brand: #2563EB;
+  --sky-brand: #0EA5E9;
+  --success: #10B981;
+  --warn: #F59E0B;
+  --danger: #EF4444;
+  --surface: #F8FAFC;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { background: var(--surface); color: var(--foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+}
+
+@utility glass {
+  background: color-mix(in oklab, white 70%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklab, white 60%, transparent);
+}
+
+@utility shadow-soft {
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10);
+}
+@utility shadow-float {
+  box-shadow: 0 4px 12px -4px rgba(15,23,42,0.08), 0 24px 48px -20px rgba(37,99,235,0.25);
+}
+
+@keyframes float-y { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes float-slow { 0%,100%{transform:translate(0,0)} 50%{transform:translate(6px,-10px)} }
+@keyframes drift { 0%{transform:translateX(-10px)} 100%{transform:translateX(10px)} }
+@keyframes pulse-ring { 0%{transform:scale(0.6);opacity:.7} 100%{transform:scale(2);opacity:0} }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes twinkle { 0%,100%{opacity:.3;transform:scale(.9)} 50%{opacity:1;transform:scale(1.1)} }
+@keyframes bar-rise { 0%{transform:scaleY(0.4)} 100%{transform:scaleY(1)} }
+@keyframes bg-shift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes fade-swap { 0%{opacity:0;transform:translateY(4px)} 15%,85%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-4px)} }
+@keyframes dot-path { 0%{stroke-dashoffset:60} 100%{stroke-dashoffset:0} }
+@keyframes bounce-tiny { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+@keyframes drawer-in { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+
+.animate-float { animation: float-y 4s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+.animate-drift { animation: drift 8s ease-in-out infinite alternate; }
+.animate-spin-slow { animation: spin-slow 12s linear infinite; }
+.animate-twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+.animate-bg-shift { background-size: 200% 200%; animation: bg-shift 10s ease infinite; }
+.animate-dot-path { stroke-dasharray: 4 6; animation: dot-path 3s linear infinite; }
+
+.pulse-ring::before, .pulse-ring::after {
+  content:""; position:absolute; inset:0; border-radius:9999px;
+  background: currentColor; opacity:.4; animation: pulse-ring 2.4s ease-out infinite;
+}
+.pulse-ring::after { animation-delay: 1.2s; }
+
+.press { transition: transform .18s ease, box-shadow .18s ease; }
+.press:active { transform: scale(0.97); }
