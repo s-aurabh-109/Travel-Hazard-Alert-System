@@ -3,8 +3,8 @@ import { MapContainer, Marker, Popup, TileLayer, Circle, useMap } from "react-le
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useSafety } from "../../context/SafetyContext";
-import { getNearestHospitals } from "../../../../frontend/src/services/hospitalService";
-import { getNearestPoliceStations } from "../../../../frontend/src/services/policeService";
+import { getNearestHospitals } from "../../services/hospitalService";
+import { getNearestPoliceStations } from "../../services/policeService";
 
 const hospitalIcon = L.divIcon({
   className: "hospital-marker",
